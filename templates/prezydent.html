@@ -5,6 +5,10 @@
     <title>Wybory</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="{% static 'js/maps.js' %}"></script>
 </head>
 <body>
     <header>
@@ -33,10 +37,109 @@
         <h1>Wyniki głosowania</h1>
         <section>
             <aside>
-                <article>Aside1</article>
-                <article>Aside2</article>
+                <article>
+                    <h2>Zobacz także</h2>
+                    <ul>
+                        <li><a href="#">Frekwencja</a></li>
+                        <li><a href="#">Wyniki głosowania zagranicą</a></li>
+                        <li><a href="#">Porównanie wyników głosowania na kandydatów w zależności od siedziby komisji obwodowej</a></li>
+                    </ul>
+                    <h2>Szczegółowe wyniki głosowania na kandydatów:</h2>
+                    <ul>
+                        <li><a href="#">Kandydat I</a></li>
+                        <li><a href="#">Kandydat II</a></li>
+                    </ul>
+                </article>
+                <article id="brief_summary">
+                    <table>
+                        <thead>
+                        <tr>
+                            <td colspan="3">
+                                <h2>Kandydat kandydat kandydat</h2>
+                            </td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <col span="1" class="bar_column">
+                        <tr>
+                            <td>
+                                <div class="result_bar">
+                                    <span class="difference" style="width: 50%"></span>
+                                </div>
+                            </td>
+                            <td>50%</td>
+                            <td>liczba</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td colspan="3">
+                                <h2>Kandydat kandydat kandydat</h2>
+                            </td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <col span="1" class="bar_column">
+                        <tr>
+                            <td>
+                                <div class="result_bar">
+                                    <span class="difference" style="width: 50%"></span>
+                                </div>
+                            </td>
+                            <td>50%</td>
+                            <td>liczba</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </article>
             </aside>
-            <article><h2>Porównanie wyników głosowania na kandydatów</h2></article>
+            <article><h2>Porównanie wyników głosowania na kandydatów</h2>
+                <div id="results_map"><div id="map_loader"><img src="{% static 'img/loader.gif' %}"/></div></div>
+                <div id="results_details">
+                    <h2>Polska</h2>
+                    <table class="statistics">
+                        <tbody>
+                            <tr>
+                                <td colspan="2">Statystyka, stan na 30.06.2005</td>
+                            </tr>
+                            <tr>
+                                <td>Liczba mieszkańców:</td>
+                                <td>38028391</td>
+                            </tr>
+                            <tr>
+                                <td>Powierzchnia:</td>
+                                <td>312685 km<sup>2</sup></td>
+                            </tr>
+                            <tr>
+                                <td>Zaludnienie:</td>
+                                <td>121 <sup>os</sup>&frasl;<sub>km<sup>2</sup></sub></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">Zbiorcze wyniki głosowania</td>
+                            </tr>
+                            <tr>
+                                <td>Liczba uprawnionych:</td>
+                                <td>38028391</td>
+                            </tr>
+                            <tr>
+                                <td>Liczba wydanych kart:</td>
+                                <td>312685 km<sup>2</sup></td>
+                            </tr>
+                            <tr>
+                                <td>Liczba oddanych głosów:</td>
+                                <td>121 <sup>os</sup>&frasl;<sub>km<sup>2</sup></sub></td>
+                            </tr>
+                            <tr>
+                                <td>Liczba ważnych głosów:</td>
+                                <td>121 <sup>os</sup>&frasl;<sub>km<sup>2</sup></sub></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="clear"></div>
+            </article>
             <div class="clear"></div>
         </section>
         <article>
@@ -48,7 +151,7 @@
                         <td rowspan="3">Nazwa</td>
                         <td rowspan="3">Liczba głosów ważnych</td>
                         <td colspan="2">Kandydat I</td>
-                        <td rowspan="3">Liczba głosów: <br />na kandydata / ważnych [&#37;]</td>
+                        <td rowspan="3" class="bar_column">Liczba głosów: <br />na kandydata / ważnych [&#37;]</td>
                         <td colspan="2">Kandydat II</td>
                     </tr>
                     <tr>
@@ -69,7 +172,11 @@
                         <td>data</td>
                         <td>data</td>
                         <td>data</td>
-                        <td>data</td>
+                        <td>
+                            <div class="result_bar">
+                                <span class="difference" style="width: 50%"></span>
+                            </div>
+                        </td>
                         <td>data</td>
                         <td>data</td>
                     </tr>
@@ -81,14 +188,77 @@
                         <td>data</td>
                         <td>data</td>
                         <td>data</td>
-                        <td>data</td>
+                        <td>
+                            <div class="result_bar">
+                                <span class="difference" style="width: 50%"></span>
+                            </div>
+                        </td>
                         <td>data</td>
                         <td>data</td>
                     </tr>
                 </tfoot>
             </table>
         </article>
-        <article><h2>Porównanie wyników głosowania na kandydatów w zależności od siedziby komisji obwodowej</h2></article>
+        <article>
+            <h2>Porównanie wyników głosowania na kandydatów w zależności od siedziby komisji obwodowej</h2>
+            <table class="comparison">
+                <thead>
+                    <tr>
+                        <td rowspan="3">Nr</td>
+                        <td rowspan="3">Podział</td>
+                        <td rowspan="3">Liczba głosów ważnych</td>
+                        <td colspan="2">Kandydat I</td>
+                        <td rowspan="3" class="bar_column">Liczba głosów: <br />na kandydata / ważnych [&#37;]</td>
+                        <td colspan="2">Kandydat II</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">głosów na kandydata</td>
+                        <td colspan="2">głosów na kandydata</td>
+                    </tr>
+                    <tr>
+                        <td>liczba</td>
+                        <td>&#37;</td>
+                        <td>liczba</td>
+                        <td>&#37;</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>
+                            <div class="result_bar">
+                                <span class="difference" style="width: 50%"></span>
+                            </div>
+                        </td>
+                        <td>data</td>
+                        <td>data</td>
+                    </tr>
+                    <tr>
+                        <td colspan="8">
+                            <h2>Porównanie wyników głosowania na kandydatów w zależności od liczby mieszkańców gminy</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>
+                            <div class="result_bar">
+                                <span class="difference" style="width: 50%"></span>
+                            </div>
+                        </td>
+                        <td>data</td>
+                        <td>data</td>
+                    </tr>
+                </tbody>
+            </table>
+        </article>
     </section>
 </body>
 </html>
