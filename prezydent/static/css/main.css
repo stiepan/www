@@ -1,0 +1,143 @@
+body {
+    margin: 0px;
+    padding: 0px;
+    background: #eae8e0;
+}
+header {
+    width: 100%;
+    background: white;
+}
+section {
+    width: 989px;
+    margin: 0px auto;
+    font-family: Arial, Sans-serif;
+    font-size: 16px;
+}
+header .langs {
+    background: #76808d;
+}
+header .langs section {
+    background: url('../img/top_pl.png') no-repeat;
+    width: 989px;
+    height: 41px;
+}
+header .banner::before{
+    content: "";
+    display: block;
+    position: absolute;
+    width: calc((100% - 989px) / 2);
+    border-top: solid 2px #8c8c8c;
+}
+header .banner::after{
+    content: "";
+    display: block;
+    position: absolute;
+    width: calc((100% - 989px) / 2);
+    right: 0px;
+    margin-top: -89px;
+    border-top: solid 2px #8c8c8c;
+}
+header .banner section {
+    background-image: url('../img/main_pl.jpg');
+    width: 989px;
+    height: 89px;
+}
+header nav {
+    background: #929eaf;
+    border-top: solid 1px white;
+    padding: 5px 0px;
+}
+header nav::before, header nav::after {
+    content: "";
+    position: relative;
+    background: #6e7784;
+    display: block;
+    width: 100%;
+    height: 1px;
+}
+header nav::before {
+    top: -5px;
+}
+header nav::after {
+    top: 5px;
+}
+header nav a , header nav a:visited {
+    color: white;
+    font-size: 70%;
+    letter-spacing: 1px;
+    font-weight: bold;
+    text-decoration: none;
+}
+header nav a:hover {
+    color: #a90414;
+    cursor: pointer;
+}
+header nav a + a::before {
+    content: "|";
+    display: inline-block;
+    padding: 0px 5px 0px 0px;
+    color: #878e98;
+}
+section h1 {
+    color: white;
+    background-color: #a90414;
+    font-weight: normal;
+    display: inline-block;
+    padding: 5px 25px;
+    font-size: 110%;
+}
+aside + article {
+    width: calc(60% - 20px);
+    height: 100%;
+}
+aside {
+    width: 40%;
+    float: right;
+}
+article {
+    background: white;
+    border: 1px solid #929eaf;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+article h2 {
+    color: black;
+    font-size: 65%;
+    font-weight: normal;
+    margin: 5px 15px;
+}
+.clear {
+    visibility: hidden;
+    clear: both;
+}
+.comparison {
+    width: 100%;
+    background: #eae8e0;
+    font-size: 75%;
+    vertical-align: middle;
+    text-align: center;
+    border-spacing: 0px;
+    border-collapse: collapse;
+}
+.comparison thead td, .comparison tfoot td {
+    padding: 2px 1px;
+    background: #eae8e0;
+    border: solid 1px #868580;
+    font-weight: bold;
+}
+.comparison tbody td {
+    padding: 2px;
+    border: solid 1px #d3d2cd;
+}
+.comparison td:first-of-type {
+    border-left: none;
+}
+.comparison td:last-of-type {
+    border-right: none;
+}
+.comparison tbody {
+    background-color: white;
+}
+.comparison tfoot td {
+    color: #a90414;
+}

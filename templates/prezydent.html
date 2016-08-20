@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wybory</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
+</head>
+<body>
+    <header>
+        <div class="langs">
+            <section></section>
+        </div>
+        <div class="banner">
+            <section></section>
+        </div>
+        <nav>
+            <section>
+                <a>Akty Prawne</a>
+                <a>Dokumenty</a>
+                <a>Organy wyborcze</a>
+                <a>Kandydaci</a>
+                <a>Frekwencja</a>
+                <a>Wyniki</a>
+                <a>Pierwsze głosowanie</a>
+                <a>Sejm</a>
+                <a>Senat</a>
+                <a>Wykonawca</a>
+            </section>
+        </nav>
+    </header>
+    <section>
+        <h1>Wyniki głosowania</h1>
+        <section>
+            <aside>
+                <article>Aside1</article>
+                <article>Aside2</article>
+            </aside>
+            <article><h2>Porównanie wyników głosowania na kandydatów</h2></article>
+            <div class="clear"></div>
+        </section>
+        <article>
+            <h2>Porównanie wyników głosowania na kandydatów</h2>
+            <table class="comparison">
+                <thead>
+                    <tr>
+                        <td rowspan="3">Nr</td>
+                        <td rowspan="3">Nazwa</td>
+                        <td rowspan="3">Liczba głosów ważnych</td>
+                        <td colspan="2">Kandydat I</td>
+                        <td rowspan="3">Liczba głosów: <br />na kandydata / ważnych [&#37;]</td>
+                        <td colspan="2">Kandydat II</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">głosów na kandydata</td>
+                        <td colspan="2">głosów na kandydata</td>
+                    </tr>
+                    <tr>
+                        <td>liczba</td>
+                        <td>&#37;</td>
+                        <td>liczba</td>
+                        <td>&#37;</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td>Σ</td>
+                        <td>Polska</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                        <td>data</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </article>
+        <article><h2>Porównanie wyników głosowania na kandydatów w zależności od siedziby komisji obwodowej</h2></article>
+    </section>
+</body>
+</html>
