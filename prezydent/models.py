@@ -12,7 +12,24 @@ class Voivodeship(models.Model):
 
     @property
     def results(self):
-        self.municipality_set.values('candidateresult__candidate').annotate()
+        cands = self.municipality_set.values('candidateresult__candidate',
+                                             'candidateresult__candidate__first_name',
+                                             'candidateresult__candidate__surname')\
+            .annotate(models.Sum('candidateresult__votes'))\
+            .order_by('candidateresult__candidate__surname')
+        all = self.municipality_set.aggregate(models.Sum('valid_votes'))
+        valid = all['valid_votes__sum']
+        res = list()
+        for cand in cands:
+            if cand['candidateresult__candidate'] is not None:
+                res.append({
+                    'id': cand['candidateresult__candidate'],
+                    'first_name': cand['candidateresult__candidate__first_name'],
+                    'surname': cand['candidateresult__candidate__surname'],
+                    'votes': cand['candidateresult__votes__sum'],
+                    'percentage': round(cand['candidateresult__votes__sum'] / valid * 100, 2)
+                })
+        return {'valid_votes': valid, 'candidates': res}
 
     def __str__(self):
         return "Województwo " + self.name
@@ -26,6 +43,29 @@ class MunicipalityType(models.Model):
 
     def __str__(self):
         return self.name
+
+    def results_in_range(self, atleast, atmost):
+        cands = self.municipality_set.filter(dwellers__gte=atleast, dwellers__lte=atmost)\
+            .values('candidateresult__candidate', 'candidateresult__candidate__first_name',
+                    'candidateresult__candidate__surname').annotate(models.Sum('candidateresult__votes'))\
+            .order_by('candidateresult__candidate__surname')
+        all = self.municipality_set.aggregate(models.Sum('valid_votes'))
+        valid = all['valid_votes__sum']
+        res = list()
+        for cand in cands:
+            if cand['candidateresult__candidate'] is not None:
+                res.append({
+                    'id': cand['candidateresult__candidate'],
+                    'first_name': cand['candidateresult__candidate__first_name'],
+                    'surname': cand['candidateresult__candidate__surname'],
+                    'votes': cand['candidateresult__votes__sum'],
+                    'percentage': round(cand['candidateresult__votes__sum'] / valid * 100, 2)
+                })
+        return {'valid_votes': valid, 'candidates': res}
+
+    @property
+    def results(self):
+        return self.results_in_range(0, 100000000)
 
 
 class Municipality(models.Model):
@@ -51,16 +91,23 @@ class Municipality(models.Model):
         return None not in [self.dwellers, self.entitled, self.issued_cards, self.votes, self.valid_votes] \
                and CandidateResult.objects.filter(municipality=self).count() == Candidate.objects.count()
 
-    # TODO: Refactor underlying SQL
     @property
     def results(self):
         res = list()
         if self.filled:
-            cands = Candidate.objects.all().order_by('surname')
+            cands = self.candidateresult_set.values('candidate', 'candidate__first_name', 'candidate__surname')\
+                .annotate(models.Sum('votes')).order_by('candidate__surname')
+            valid = self.valid_votes
             for cand in cands:
-                cvotes = CandidateResult.objects.get(municipality=self, candidate=cand).votes
-                res.append((cand, cvotes, round(cvotes/self.votes*100, 2)))
-        return res
+                if cand['candidate'] is not None:
+                    res.append({
+                        'id': cand['candidate'],
+                        'first_name': cand['candidate__first_name'],
+                        'surname': cand['candidate__surname'],
+                        'votes': cand['votes__sum'],
+                        'percentage': round(cand['votes__sum'] / valid * 100, 2)
+                    })
+            return {'valid_votes': valid, 'candidates': res}
 
 
 
@@ -79,6 +126,20 @@ class Candidate(models.Model):
     @property
     def age(self):
         return relativedelta(datetime.now().date(), self.date_of_birth).years
+
+    @property
+    def results(self):
+        candv = self.candidateresult_set.aggregate(models.Sum('votes'))
+        all = Municipality.objects.all().aggregate(models.Sum('valid_votes'))
+        if candv is None:
+            candv = 0;
+        if all is None:
+            return None
+        return {
+            'for_all': all['valid_votes__sum'],
+            'votes': candv['votes__sum'],
+            'percentage': round(candv['votes__sum'] / all['valid_votes__sum'] * 100, 2),
+        }
 
 
 class CandidateResult(models.Model):
