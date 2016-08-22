@@ -88,7 +88,6 @@ section h1 {
 }
 aside + article {
     width: calc(60% - 20px);
-    height: 100%;
 }
 aside {
     width: 40%;
@@ -109,6 +108,9 @@ article h2 {
 .clear {
     visibility: hidden;
     clear: both;
+}
+.general_comparision, .main_section {
+    overflow: hidden;
 }
 aside h2 {
     font-weight: bold;
@@ -215,6 +217,8 @@ a:hover {
     width: 320px;
     height: 278px;
     border: solid 1px #d3d2cd;
+    border-bottom: none;
+    border-left: none;
     overflow: hidden;
 }
 #map_loader {
@@ -223,7 +227,8 @@ a:hover {
 }
 #results_details {
     float: right;
-    width: calc(100% - 322px);
+    width: calc(100% - 321px);
+    overflow: hidden;
 }
 #results_details h2 {
     font-size: 140%;

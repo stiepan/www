@@ -7,7 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from django.contrib.messages import constants as message_constants
 from django.shortcuts import HttpResponseRedirect
-
+from django.db.models import Count, Max, F
 
 admin.site.unregister(User)
 admin.site.unregister(Group)
@@ -31,7 +31,7 @@ class MunicipalityForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._candidates_fields.clear()
-        candidates = Candidate.objects.all()
+        candidates = Candidate.objects.all().order_by('surname')
         for candidate in candidates:
             field_name =  "candidate_" + str(candidate.id)
             verbose_name = str(candidate)
@@ -51,7 +51,7 @@ class MunicipalityForm(forms.ModelForm):
             if any(filled):
                 if not all(filled):
                     raise forms.ValidationError("Sekcja nie może być częściowo pusta.")
-                if sorted(statistics_set, key=lambda name : self.cleaned_data[name]) != statistics_set:
+                if sorted(statistics_set, key=lambda name : self.cleaned_data[name], reverse=True) != statistics_set:
                     raise forms.ValidationError("Wprowadzone statystyki są niepoprawne")
             filled_candidates = 0
             candidates_votes = 0
@@ -66,7 +66,8 @@ class MunicipalityForm(forms.ModelForm):
                     raise forms.ValidationError("Głosy ważne powinny być sumą głosów oddanych na kandydatów.")
             # Don't really bother multi-thread environment as model enforces uniqueness of the name
             # in case of the race user might simply see 500 server error
-            existing = Municipality.objects.filter(name=name)
+            existing = Municipality.objects.filter(name=name, type=self.cleaned_data['type'],
+                                                   voivodeship=self.cleaned_data['voivodeship'])
             if self.instance is not None:
                 existing = existing.exclude(id=self.instance.id)
             if existing.count():
@@ -88,10 +89,53 @@ class MunicipalityForm(forms.ModelForm):
         return municipality
 
 
+class Filled(admin.SimpleListFilter):
+    title = "Wypełniona i uwzględniana"
+    parameter_name = 'filled'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('True', 'tak'),
+            ('False', 'nie'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        candsn = Candidate.objects.all().count()
+        first = queryset.annotate(cands = Count('candidateresult'))
+        if self.value() == 'True':
+            return first.filter(cands=candsn, dwellers__isnull=False, entitled__isnull=False, issued_cards__isnull=False,
+                                votes__isnull=False, valid_votes__isnull=False)
+        return first.exclude(cands=candsn, dwellers__isnull=False, entitled__isnull=False, issued_cards__isnull=False,
+                            votes__isnull=False, valid_votes__isnull=False)
+
+
+class Winner(admin.SimpleListFilter):
+    title = "Zwycięzca"
+    parameter_name = 'winner'
+
+    def lookups(self, request, model_admin):
+        opts = list()
+        cands = Candidate.objects.all().order_by('surname')
+        for cand in cands:
+            opts.append((cand.id, str(cand)))
+        return opts
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.annotate(winner_vts=Max('candidateresult__votes'))\
+            .filter(candidateresult__candidate__id=self.value(), candidateresult__votes=F('winner_vts'),)
+
+
 @admin.register(Municipality)
 class MunicipalityAdmin(admin.ModelAdmin):
     form = MunicipalityForm
     _error_message = ""
+    list_display = ('name', 'type', 'voivodeship', 'filled')
+    list_filter = [Filled, Winner, 'type', 'voivodeship']
+    search_fields = ['name']
 
     fieldsets = (
         ('Dane gminy',
@@ -115,6 +159,11 @@ class MunicipalityAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         kwargs['exclude'] = self.form._candidates_fields
         return super().get_form(request, obj, **kwargs)
+
+    def filled(self, obj):
+        return obj.filled
+    filled.short_description = "Wypełniona i uwzględniana"
+    filled.boolean = True
 
 
 class CandidateForm(forms.ModelForm):

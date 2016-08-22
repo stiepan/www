@@ -8,6 +8,11 @@ class Voivodeship(models.Model):
         verbose_name = "Województwo"
         verbose_name_plural = "Województwa"
     name = models.CharField(max_length=30, verbose_name="Nazwa województwa")
+    code = models.CharField(max_length=5, verbose_name="Kod według ISO 3166-2:PL", null=True, blank=True)
+
+    @property
+    def results(self):
+        self.municipality_set.values('candidateresult__candidate').annotate()
 
     def __str__(self):
         return "Województwo " + self.name
@@ -27,10 +32,11 @@ class Municipality(models.Model):
     class Meta:
         verbose_name = "Gmina"
         verbose_name_plural = "Gminy"
+        unique_together = ('type', 'name', 'voivodeship')
     type = models.ForeignKey(MunicipalityType, on_delete=models.PROTECT, verbose_name="Typ gminy")
     voivodeship = models.ForeignKey(Voivodeship, on_delete=models.PROTECT, null=True, blank=True,
                                     verbose_name="Województwo")
-    name = models.CharField(max_length=100, verbose_name="Nazwa gminy", unique=True)
+    name = models.CharField(max_length=100, verbose_name="Nazwa gminy")
     dwellers = models.PositiveIntegerField(verbose_name="Liczba mieszkańców", null=True, blank=True)
     entitled = models.PositiveIntegerField(verbose_name="Liczba uprawnionych do głosowania", null=True, blank=True)
     issued_cards = models.PositiveIntegerField(verbose_name="Liczba wydanych kart do głosowania", null=True, blank=True)
@@ -39,6 +45,23 @@ class Municipality(models.Model):
 
     def __str__(self):
         return "Gmina " + self.name
+
+    @property
+    def filled(self):
+        return None not in [self.dwellers, self.entitled, self.issued_cards, self.votes, self.valid_votes] \
+               and CandidateResult.objects.filter(municipality=self).count() == Candidate.objects.count()
+
+    # TODO: Refactor underlying SQL
+    @property
+    def results(self):
+        res = list()
+        if self.filled:
+            cands = Candidate.objects.all().order_by('surname')
+            for cand in cands:
+                cvotes = CandidateResult.objects.get(municipality=self, candidate=cand).votes
+                res.append((cand, cvotes, round(cvotes/self.votes*100, 2)))
+        return res
+
 
 
 class Candidate(models.Model):
