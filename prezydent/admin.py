@@ -104,8 +104,6 @@ class Filled(admin.SimpleListFilter):
             return queryset
         candsn = Candidate.objects.all().count()
         first = queryset.annotate(cands = Count('candidateresult'))
-        for tp in MunicipalityType.objects.all():
-            print (tp.results)
         if self.value() == 'True':
             return first.filter(cands=candsn, dwellers__isnull=False, entitled__isnull=False, issued_cards__isnull=False,
                                 votes__isnull=False, valid_votes__isnull=False)

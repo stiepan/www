@@ -2,18 +2,23 @@ google.charts.load('current', {'packages': ['geochart']});
 google.charts.setOnLoadCallback(drawMarkersMap);
 
 function drawMarkersMap() {
-    var data = google.visualization.arrayToDataTable([
-        ['Province', '{{ first_name }}', '{{ second_name }}', {role: 'tooltip', p:{html:true}}],
-        [{v: 'PL-MZ', f:'mazowieckie'}, 80, 20, 'kek'],
-        ['PL-MA', 99, 10, 'zal'],
-        ['PL-DS', 59, 49, 'zal']
-    ]);
+    content = [['Province', 'first_cand_per', {role: 'tooltip', p:{html:true}}]];
+    $main_comp = $('#main_comparison').find('tbody').children('tr').each(function(nr, obj) {
+        var obj = $(obj);
+        var tds = obj.children();
+        var fst = parseInt(tds[3].innerText);
+        var snd = parseInt(tds[6].innerText);
+        var desc = $('#cand_name_0').text() + ": <br>" + fst + "<br>" + $('#cand_name_1').text() + ": <br>" + snd;
+        content.push([{v:obj.find('.voiv_code').text(), f:tds[1].innerText}, fst/(fst+snd), desc]);
+    });
+    var data = google.visualization.arrayToDataTable(content);
     var options = {
         region: 'PL',
         resolution: 'provinces',
         backgroundColor: '#ddd',
         legend: 'none',
-        colorAxis: {colors: ['#0260d4', '#fa8309']},
+        colorAxis: {colors: ['#fa8309', '#0260d4']},
+        tooltip: {isHtml: true}
     };
     var $mapdiv = $('#results_map');
     var $map_container = $('<div></div>');

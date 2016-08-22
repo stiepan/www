@@ -157,18 +157,18 @@ a:hover {
     text-align: center;
     border-spacing: 0px;
     border-collapse: collapse;
-    table-layout: fixed;
     margin-bottom: 5px;
 }
 .comparison thead td, .comparison tfoot td {
-    padding: 2px 1px;
     background: #eae8e0;
     border: solid 1px #868580;
     font-weight: bold;
 }
 .comparison tbody td {
-    padding: 2px;
     border: solid 1px #d3d2cd;
+}
+.comparison td {
+    padding: 2px 5px;
 }
 .comparison td:first-of-type {
     border-left: none;
@@ -185,7 +185,9 @@ a:hover {
 .comparison .bar_column {
     width: 35%;
 }
-
+.voiv_code {
+    display: none;
+}
 .result_bar {
     width: 100%;
     height: 13px;
@@ -199,6 +201,7 @@ a:hover {
     background: black;
     position: relative;
     left: calc(50% - 1px);
+    z-index: 1;
     content: "";
 }
 .result_bar .difference {
@@ -207,6 +210,12 @@ a:hover {
     height: 13px;
     display: block;
     top: -13px;
+}
+.first_cand, .second_cand {
+    background: white;
+}
+.second_cand .difference {
+    background: #fa8309;
 }
 .comparison h2 {
     font-size: 87%;
@@ -261,4 +270,7 @@ a:hover {
 }
 .statistics tr:last-of-type td {
     border-bottom: solid 1px #868580;
+}
+.comparison tbody td:nth-child(2) {
+    text-align: left;
 }

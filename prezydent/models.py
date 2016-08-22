@@ -31,6 +31,34 @@ class Voivodeship(models.Model):
                 })
         return {'valid_votes': valid, 'candidates': res}
 
+    @staticmethod
+    def overall():
+        cands = Municipality.objects.filter(voivodeship__isnull=False).values('candidateresult__candidate',
+                                                                      'candidateresult__candidate__first_name',
+                                                                      'candidateresult__candidate__surname')\
+            .annotate(models.Sum('candidateresult__votes')).order_by('candidateresult__candidate__surname')
+        all = Municipality.objects.filter(voivodeship__isnull=False).aggregate(models.Sum('valid_votes'),
+                                                                               models.Sum('dwellers'),
+                                                                               models.Sum('entitled'),
+                                                                               models.Sum('issued_cards'),
+                                                                               models.Sum('votes'))
+        valid = all['valid_votes__sum']
+        if all['dwellers__sum'] is None:
+            all['dwellers__sum'] = 0
+        res = list()
+        for cand in cands:
+            if cand['candidateresult__candidate'] is not None:
+                res.append({
+                    'id': cand['candidateresult__candidate'],
+                    'first_name': cand['candidateresult__candidate__first_name'],
+                    'surname': cand['candidateresult__candidate__surname'],
+                    'votes': cand['candidateresult__votes__sum'],
+                    'percentage': round(cand['candidateresult__votes__sum'] / valid * 100, 2)
+                })
+        return {'valid_votes': valid, 'dwellers': all['dwellers__sum'], 'entitled': all['entitled__sum'],
+                'issued_cards': all['issued_cards__sum'], 'votes': all['votes__sum'],
+                'density': round(all['dwellers__sum'] / 312685), 'candidates': res}
+
     def __str__(self):
         return "Województwo " + self.name
 
@@ -44,12 +72,16 @@ class MunicipalityType(models.Model):
     def __str__(self):
         return self.name
 
-    def results_in_range(self, atleast, atmost):
-        cands = self.municipality_set.filter(dwellers__gte=atleast, dwellers__lte=atmost)\
-            .values('candidateresult__candidate', 'candidateresult__candidate__first_name',
-                    'candidateresult__candidate__surname').annotate(models.Sum('candidateresult__votes'))\
+    @staticmethod
+    def results_in_range(atleast, atmost, types=None):
+        municipalities = Municipality.objects.filter(type__name__in=types)\
+            .filter(dwellers__gte=atleast, dwellers__lte=atmost)
+        cands = municipalities.values('candidateresult__candidate', 'candidateresult__candidate__first_name',
+                                      'candidateresult__candidate__surname')\
+            .annotate(models.Sum('candidateresult__votes'))\
             .order_by('candidateresult__candidate__surname')
-        all = self.municipality_set.aggregate(models.Sum('valid_votes'))
+        all = municipalities.aggregate(models.Sum('valid_votes'), models.Sum('dwellers'), models.Sum('entitled'),
+                                       models.Sum('issued_cards'), models.Sum('votes'))
         valid = all['valid_votes__sum']
         res = list()
         for cand in cands:
@@ -61,11 +93,12 @@ class MunicipalityType(models.Model):
                     'votes': cand['candidateresult__votes__sum'],
                     'percentage': round(cand['candidateresult__votes__sum'] / valid * 100, 2)
                 })
-        return {'valid_votes': valid, 'candidates': res}
+        return {'valid_votes': valid, 'dwellers': all['dwellers__sum'], 'entitled': all['entitled__sum'],
+                'issued_cards': all['issued_cards__sum'], 'votes': all['votes__sum'], 'candidates': res}
 
     @property
     def results(self):
-        return self.results_in_range(0, 100000000)
+        return MunicipalityType.results_in_range(0, 100000000, [self.name])
 
 
 class Municipality(models.Model):
