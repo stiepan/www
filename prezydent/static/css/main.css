@@ -167,6 +167,9 @@ a:hover {
 .comparison tbody td {
     border: solid 1px #d3d2cd;
 }
+.comparison thead td {
+    padding: 2px 15px 2px 15px;
+}
 .comparison td {
     padding: 2px 5px;
 }
@@ -273,4 +276,25 @@ a:hover {
 }
 .comparison tbody td:nth-child(2) {
     text-align: left;
+}
+tr .clicked::after, tr .asc::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    width: 1px;
+    border-right: solid 5px transparent;
+    border-left: solid 5px transparent;
+    left: 100%;
+    top: 50%;
+    margin: -3px auto auto 0px;
+}
+tr .clicked {
+    position: relative;
+}
+tr .clicked::after {
+    border-top: solid 5px black;
+}
+tr .asc::after {
+    border-top: none;
+    border-bottom: solid 5px black;
 }
