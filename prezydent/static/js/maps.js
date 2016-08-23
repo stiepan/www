@@ -3,7 +3,7 @@ google.charts.setOnLoadCallback(drawMarkersMap);
 
 function drawMarkersMap() {
     content = [['Province', 'first_cand_per', {role: 'tooltip', p:{html:true}}]];
-    $main_comp = $('#main_comparison').find('tbody').children('tr').each(function(nr, obj) {
+    $main_comp = $('#main_comparison tbody').children('tr').each(function(nr, obj) {
         var obj = $(obj);
         var tds = obj.children();
         var fst = parseInt(tds[3].innerText);
