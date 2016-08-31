@@ -1,3 +1,5 @@
+var loggedin = false;
+
 var cookie = function (name) {
     var cookies = document.cookie.split(';');
     for (var i = 0; i < cookies.length; i++) {
@@ -14,6 +16,16 @@ var failwith =  function (txt) {
     err.show();
     setTimeout(function(){
         err.hide();
+    }, 5000);
+};
+
+var fine =  function (txt) {
+    var err = $('.error').addClass('fine');
+    err.find('p').text(txt);
+    err.show();
+    setTimeout(function(){
+        err.hide();
+        err.removeClass('fine')
     }, 5000);
 };
 
@@ -174,11 +186,32 @@ var detail = function(type, param, clicked) {
             $('.muni_details_row').remove();
             cont.find('.clicked_row').removeClass('clicked_row');
             if (!is_active) {
-                clicked.addClass('clicked_row');
-                var munitr = $('<tr class="muni_details_row"></tr>');
-                var muni = $('<td colspan="8" class="muni_details"></td>');
-                cont.animate({scrollTop: cont.scrollTop() - cont.offset().top + clicked.offset().top}, 500);
-                setTimeout(function() {clicked.after(munitr.append(muni))}, 500);
+                var disabled = loggedin ? '' : 'disabled=""';
+                request('/municipality/' + param).then( function (res) {
+                    var munitr = $('<tr class="muni_details_row"></tr>');
+                    var muni = $('<td colspan="8" class="muni_details"></td>');
+                    $.each(res, function(k, v) {
+                        var ddisplay = k == 'last_modification'? 'style="display: none"' : '';
+                        muni.append('<div '+ddisplay+' class="det_item"><label for="muni___'+k+'">'+v.name+'</label>' +
+                            '<input '+disabled+' type="text" name="muni___'+k+'" value="'+v.val+'"></div>')
+                    });
+                    if (loggedin) {
+                        var contr = $('<div class="det_item contr"></div>')
+                        contr.append('<a>Anuluj</a>').on('click', function () {
+                            clicked.trigger('click');
+                        });
+                        contr.append($('<a>Zapisz</a>').on('click', function() {
+                            update_muni(param);
+                        }));
+                        muni.append(contr);
+                    }
+                    $('.loader').detach();
+                    clicked.addClass('clicked_row');
+                    cont.animate({scrollTop: cont.scrollTop() - cont.offset().top + clicked.offset().top}, 500);
+                    setTimeout(function () {
+                        clicked.after(munitr.append(muni))
+                    }, 500);
+                });
             }
         }
         detail_prog = false;
@@ -186,6 +219,7 @@ var detail = function(type, param, clicked) {
 };
 
 var loginForm = function () {
+    loggedin = false;
     var form = $('<form></form>');
     var login = $('<input type="text" value="login" name="username">');
     var password = $('<input type="password" value="login" name="password">');
@@ -213,6 +247,7 @@ var loginForm = function () {
                 var hi = $('<p>Wtiaj, '+res.username+'. </p>');
                 var logout_but = $('<a>Wyloguj się</a>').on('click', logout);
                 $('.log section').empty().append(hi).append(logout_but);
+                loggedin = true;
             }
             $('.loader').detach();
         })
@@ -232,6 +267,25 @@ var logout = function () {
     });
 };
 
+var update_muni = function (id) {
+    var els = $('.det_item input');
+    var data = {};
+    $.each(els, function(i, obj) {
+       obj = $(obj);
+        data[obj.prop('name').split('___')[1]] = obj.val();
+    });
+    data['id'] = id;
+    request('/municipality/', 'POST', data).then(function (res) {
+        if (res.status != 'OK') {
+            failwith(res.status);
+            $('.loader').detach();
+        }
+        else {
+            fine('Pomyślnie zapisano dane');
+            $('.loader').detach();
+        }
+    });
+};
 
 $(document).ready(function () {
     request('/results/').then(function (res) {
@@ -247,6 +301,7 @@ $(document).ready(function () {
             loginForm();
         }
         else {
+            loggedin = true;
             var hi = $('<p>Wtiaj, '+res.username+'. </p>');
             var logout_but = $('<a>Wyloguj się</a>').on('click', logout);
             $('.log section').empty().append(hi).append(logout_but);
@@ -255,5 +310,8 @@ $(document).ready(function () {
     }, function (err) {
         $('.loader').detach();
         console.log(err);
+    });
+    $(window).on('resize', function () {
+        $('.modal_val .table_container').css('max-height', ($(window).height() - 70) + 'px');
     });
 });

@@ -198,6 +198,8 @@ a:hover {
 }
 .comparison td {
     padding: 2px 5px;
+    overflow: hidden;
+    max-width: 315px;
 }
 .comparison td:first-of-type {
     border-left: none;
@@ -386,6 +388,10 @@ footer h2 {
     animation-duration: 1s;
     display: none;
 }
+.fine {
+    background-color: #1d681a;
+    border-top: 2px solid #29c412;
+}
 .error p {
     display: block;
     color: white;
@@ -400,7 +406,51 @@ footer h2 {
     height: 150px;
     animation-name: show_details;
     animation-duration: 0.5s;
+    text-align: left;
 }
 .clicked_row {
     background: #fffacb;
+}
+.det_item {
+    display: inline-block;
+    text-align: left;
+    width: 150px;
+    overflow: hidden;
+    padding: 10px 30px 5px 30px;
+}
+.det_item label {
+    display: inline-block;
+    font-weight: bold;
+}
+.det_item a {
+    background: #a90414;
+    padding: 3px;
+    color: white;
+}
+.det_item a:hover {
+    background: white;
+    color: #a90414;
+}
+.det_item a + a {
+    margin-left: 15px;
+}
+.det_item input, .det_item input:disabled {
+    display: block;
+    background: white;
+    border: 1px solid #d3d2cd;
+    outline: none;
+    padding: 3px;
+    width: 50px;
+    margin-top: 5px;
+}
+.det_item input:disabled {
+    background: transparent;
+    border: none;
+    cursor: default;
+    color: black;
+}
+.contr {
+    height: 20px;
+    text-align: right;
+    width: 270px;
 }

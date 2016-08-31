@@ -2,11 +2,11 @@ from django.contrib import admin
 from django.db import transaction
 from django import forms
 from .models import Voivodeship, Municipality, MunicipalityType, Candidate, CandidateResult
-from datetime import datetime
+from django.utils import timezone as datetime
 from dateutil.relativedelta import relativedelta
 from django.contrib.messages import constants as message_constants
 from django.shortcuts import HttpResponseRedirect
-from django.db.models import Count, Max, F
+from django.db.models import Count, Max, F, Q
 
 admin.site.register(Voivodeship)
 admin.site.register(MunicipalityType)
@@ -56,10 +56,13 @@ class MunicipalityForm(forms.ModelForm):
                 if candidate_votes is not None:
                     filled_candidates += 1
                     candidates_votes += candidate_votes
-            if filled_candidates == len(self._candidates_fields):
-                valid_votes = self.cleaned_data.get('valid_votes')
-                if valid_votes is None or candidates_votes != valid_votes:
-                    raise forms.ValidationError("Głosy ważne powinny być sumą głosów oddanych na kandydatów.")
+            if filled_candidates > 0:
+                if filled_candidates != len(self._candidates_fields):
+                    raise forms.ValidationError("Należy uzupełnić wyniki dla wszystkich kandydatów.")
+                else:
+                    valid_votes = self.cleaned_data.get('valid_votes')
+                    if valid_votes is None or candidates_votes != valid_votes:
+                        raise forms.ValidationError("Głosy ważne powinny być sumą głosów oddanych na kandydatów.")
             # Don't really bother multi-thread environment as model enforces uniqueness of the name
             # in case of the race user would simply see 500 server error
             existing = Municipality.objects.filter(name=name, type=self.cleaned_data['type'],
@@ -69,6 +72,7 @@ class MunicipalityForm(forms.ModelForm):
             if existing.count():
                 raise forms.ValidationError("Gmina o takiej nazwie już istnieje. Edytuj ją lub usuń.")
 
+    @transaction.atomic
     def save(self, commit=True):
         municipality = super().save(commit)
         for candidate_name in self._candidates_fields:
@@ -82,6 +86,8 @@ class MunicipalityForm(forms.ModelForm):
                 if not created:
                     result.votes = candidate_votes
                     result.save()
+            elif self.instance is not None:
+                CandidateResult.objects.filter(municipality=self.instance).delete()
         return municipality
 
 
@@ -135,7 +141,7 @@ class MunicipalityAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Dane gminy',
-         {'fields': ('type', 'voivodeship', 'name')}
+         {'fields': ('type', 'voivodeship', 'name', 'last_modification')}
          ),
         ('Statystyki głosowania:',
          {'fields': ('dwellers', 'entitled', 'issued_cards', 'votes', 'valid_votes'),

@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime
+from django.utils import timezone as datetime
 from dateutil.relativedelta import relativedelta
 
 
@@ -87,6 +87,8 @@ class Municipality(models.Model):
     issued_cards = models.PositiveIntegerField(verbose_name="Liczba wydanych kart do głosowania", null=True, blank=True)
     votes = models.PositiveIntegerField(verbose_name="Liczba oddanych głosów", null=True, blank=True)
     valid_votes = models.PositiveIntegerField(verbose_name="Liczba ważnych głosów", null=True, blank=True)
+    last_modification = models.DateTimeField(default=datetime.now, blank=True,
+                                             verbose_name="Ostatnio modyfikowany")
 
     def __str__(self):
         return "Gmina " + self.name

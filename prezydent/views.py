@@ -1,10 +1,14 @@
 from django.views.generic import TemplateView, View
 from django.contrib.auth import logout, authenticate, login
-from prezydent.models import Candidate, Voivodeship, MunicipalityType, Municipality
+from prezydent.models import Candidate, Voivodeship, MunicipalityType, Municipality, CandidateResult
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from prezydent.forms import MunicipalityForm
 import json
+from collections import OrderedDict
+
 
 infinity = 100000000
 exter = ['statki', 'zagranica']
@@ -60,7 +64,7 @@ class Detailed(View):
         lst = accepted.get(type)
         if lst is None:
             return JsonResponse({'status': 'Incorrect type passed'})
-        ms = [{'name': m.name, 'results': m.results, 'id': m.id} for m in lst()]
+        ms = [{'name': m.name, 'results': m.results, 'id': m.id} for m in lst() if m.filled]
         return JsonResponse({'status': 'OK', 'muni': ms})
 
 
@@ -86,6 +90,43 @@ class Login(View):
                 return JsonResponse({'status': 'unrecognized'})
         return self.get(request)
 
+class Muni(View):
+    
+    def get(self, request, id=None):
+        muni = Municipality.objects.filter(id=id)
+        if len(muni) != 1:
+            return JsonResponse({'status': 'Dla wybranej gminy nie ma żadnych danych.'})
+        muni = muni.first()
+        if not muni.filled:
+            return JsonResponse({'status': 'Wybrana gmina jest nieaktywna.'})
+        else:
+            attrs = [(attr, {'val': getattr(muni, attr), 'name': Municipality._meta.get_field(attr)
+              .verbose_name.title()}) for attr in ['dwellers', 'entitled', 'issued_cards', 'votes',
+                                                   'valid_votes', 'last_modification']]
+            cands = CandidateResult.objects.filter(municipality=muni)\
+                .values_list('candidate__surname', 'candidate__first_name', 'candidate__id', 'votes')
+            for cand in cands:
+                attrs.append(('candidate_' + str(cand[2]), {'val': str(cand[3]), 'name': cand[0] + ' ' + cand[1]}))
+            return JsonResponse(OrderedDict(attrs))
+
+    def post(self, request):
+        if not request.user.is_authenticated():
+            return JsonResponse({"status": "Nie masz uprawnień do wykonania tej czynności"})
+        data = json.loads(request.body.decode('utf-8'))
+        mun = Municipality.objects.filter(id=data['id'])
+        if (len(mun)) != 1:
+            return JsonResponse({"status", "Wybrana gmina nie istnieje"})
+        mun = mun.first()
+        data.update({'last_modification': mun.last_modification})
+        form = MunicipalityForm(data=data)
+        if not form.is_valid():
+            return JsonResponse({"status": "Nieprawidłowe dane."})
+        try:
+            form.save(mun)
+        except:
+            return JsonResponse({"status": "Wystąpił błąd. Sprawdź czy dane nie zostały zmodyfikowane "
+                                           "przez innego użytkownika."})
+        return JsonResponse({'status': 'OK'})
 
 # def handle_500(request):
 #    template = loader.get_template('500.html')
