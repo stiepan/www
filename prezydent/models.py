@@ -21,7 +21,7 @@ class Voivodeship(models.Model):
         valid = all['valid_votes__sum']
         res = list()
         for cand in cands:
-            if cand['candidateresult__candidate'] is not None:
+            if cand['candidateresult__candidate'] is not None and valid is not None:
                 res.append({
                     'id': cand['candidateresult__candidate'],
                     'first_name': cand['candidateresult__candidate__first_name'],
@@ -107,8 +107,6 @@ class Municipality(models.Model):
                 if cand['candidate'] is not None:
                     res.append({
                         'id': cand['candidate'],
-                        'first_name': cand['candidate__first_name'],
-                        'surname': cand['candidate__surname'],
                         'votes': cand['votes__sum'],
                         'percentage': round(cand['votes__sum'] / valid * 100, 2)
                     })
@@ -138,7 +136,7 @@ class Candidate(models.Model):
         all = Municipality.objects.all().aggregate(models.Sum('valid_votes'))
         if candv is None:
             candv = 0;
-        if all is None:
+        if all is None or all['valid_votes__sum'] is None:
             return None
         return {
             'for_all': all['valid_votes__sum'],

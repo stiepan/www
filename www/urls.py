@@ -21,5 +21,9 @@ from prezydent import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^$', views.prezydent)
+    url(r'^$', views.Main.as_view()),
+    url(r'^results/$', views.Results.as_view()),
+    url(r'^results/detailed/(\w+),([0-9]+)_([0-9]+)$', views.Detailed.as_view()),
+    url(r'^results/detailed/(\w+),([0-9, \w, \-]+)$', views.Detailed.as_view()),
+    url(r'^login/$', views.Login.as_view())
 ]

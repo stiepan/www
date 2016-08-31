@@ -1,15 +1,16 @@
 google.charts.load('current', {'packages': ['geochart']});
-google.charts.setOnLoadCallback(drawMarkersMap);
 
-function drawMarkersMap() {
+function drawMarkersMap(c1, c2) {
+    var $loader = $('#map_loader');
+    $loader.css('display', 'block');
     content = [['Province', 'first_cand_per', {role: 'tooltip', p:{html:true}}]];
     $main_comp = $('#main_comparison tbody').children('tr').each(function(nr, obj) {
         var obj = $(obj);
         var tds = obj.children();
         var fst = parseInt(tds[3].innerText);
         var snd = parseInt(tds[6].innerText);
-        var desc = $('#cand_name_0').text() + ": <br>" + fst + "<br>" + $('#cand_name_1').text() + ": <br>" + snd;
-        content.push([{v:obj.find('.voiv_code').text(), f:tds[1].innerText}, fst/(fst+snd), desc]);
+        var desc = c1 + ": <br>" + fst + "<br>" + c2 + ": <br>" + snd;
+        content.push([{v:obj.find('.voiv_code').prop('id').split('_')[1], f:tds[1].innerText}, fst/(fst+snd), desc]);
     });
     var data = google.visualization.arrayToDataTable(content);
     var options = {
@@ -22,7 +23,6 @@ function drawMarkersMap() {
     };
     var $mapdiv = $('#results_map');
     var $map_container = $('<div></div>');
-    var $loader = $('#map_loader');
     var outer_height = $mapdiv.height();
     var outer_width = $mapdiv.width();
     var scale = 1.5;
@@ -40,9 +40,12 @@ function drawMarkersMap() {
         'left': (1 - scale) * outer_width / 2
     });
     var scaleMap = function() {
-        $('#map_loader').css('display', 'none');
+        $loader.css('display', 'none');
     };
     var chart = new google.visualization.GeoChart($map_container[0]);
     google.visualization.events.addListener(chart, 'ready', scaleMap);
+    google.visualization.events.addListener(chart, 'regionClick', function (reg) {
+        detail('voiv', reg.region);
+    });
     chart.draw(data, options);
 };

@@ -10,11 +10,13 @@
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="{% static 'js/maps.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/sort.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/results.js' %}"></script>
 </head>
 <body>
     <header>
-        <div class="langs">
-            <section></section>
+        <div class="log">
+            <section>
+            </section>
         </div>
         <div class="banner">
             <section></section>
@@ -47,18 +49,16 @@
                     </ul>
                     <h2>Szczegółowe wyniki głosowania na kandydatów:</h2>
                     <ul>
-                        {% for candidate in candidates %}
-                        <li><a href="#">{{ candidate.1 | upper }} {{ candidate.0 }}</a></li>
-                        {% endfor %}
+                        <li><a class="cand1" href="#"></a></li>
+                        <li><a class="cand2" href="#"></a></li>
                     </ul>
                 </article>
                 <article id="brief_summary">
-                    {% for cand in overall.candidates %}
                     <table>
                         <thead>
                         <tr>
                             <td colspan="3">
-                                <h2 id="cand_name_{{ forloop.counter0 }}">{{ cand.surname | upper }} {{ cand.first_name }}</h2>
+                                <h2 class="cand1"></h2>
                             </td>
                         </tr>
                         </thead>
@@ -66,17 +66,38 @@
                         <col span="1" class="bar_column">
                         <tr>
                             <td>
-                                <div class="result_bar {% cycle "first_cand" "second_cand" %}">
+                                <div class="result_bar first_cand">
                                     <span class="difference"
-                                          style="width: {{ cand.percentage|floatformat:"0" }}%"></span>
+                                          style=""></span>
                                 </div>
                             </td>
-                            <td>{{ cand.percentage }}&#37;</td>
-                            <td>{{ cand.votes }}</td>
+                            <td class="cand1_pr"></td>
+                            <td class="cand1_vt"></td>
                         </tr>
                         </tbody>
                     </table>
-                    {% endfor %}
+                    <table>
+                        <thead>
+                        <tr>
+                            <td colspan="3">
+                                <h2 class="cand2"></h2>
+                            </td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <col span="1" class="bar_column">
+                        <tr>
+                            <td>
+                                <div class="result_bar second_cand">
+                                    <span class="difference"
+                                          style=""></span>
+                                </div>
+                            </td>
+                            <td class="cand2_pr"></td>
+                            <td class="cand2_vt"></td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </article>
             </aside>
             <article class="general_comparision">
@@ -91,7 +112,7 @@
                             </tr>
                             <tr>
                                 <td>Liczba mieszkańców:</td>
-                                <td>{% firstof voiv_overall.dwellers "0" %}</td>
+                                <td class="dwellers"></td>
                             </tr>
                             <tr>
                                 <td>Powierzchnia:</td>
@@ -99,26 +120,26 @@
                             </tr>
                             <tr>
                                 <td>Zaludnienie:</td>
-                                <td>{% firstof density "0" %} <sup>os</sup>&frasl;<sub>km<sup>2</sup></sub></td>
+                                <td><span class="density"></span> <sup>os</sup>&frasl;<sub>km<sup>2</sup></sub></td>
                             </tr>
                             <tr>
                                 <td colspan="2">Zbiorcze wyniki głosowania</td>
                             </tr>
                             <tr>
                                 <td>Liczba uprawnionych:</td>
-                                <td>{% firstof voiv_overall.entitled "0" %}</td>
+                                <td class="entitled"></td>
                             </tr>
                             <tr>
                                 <td>Liczba wydanych kart:</td>
-                                <td>{% firstof voiv_overall.issued_cards "0" %}</td>
+                                <td class="issued_cards"></td>
                             </tr>
                             <tr>
                                 <td>Liczba oddanych głosów:</td>
-                                <td>{% firstof voiv_overall.votes "0" %}</td>
+                                <td class="votes"></td>
                             </tr>
                             <tr>
                                 <td>Liczba ważnych głosów:</td>
-                                <td>{% firstof voiv_overall.valid_votes "0" %}</td>
+                                <td class="valid_votes"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -133,9 +154,9 @@
                         <td rowspan="3"><div class="clicked">Nr</div></td>
                         <td rowspan="3"><div>Nazwa</div></td>
                         <td rowspan="3"><div>Liczba głosów ważnych</div></td>
-                        <td colspan="2"><div>{{ candidates.0.1 | upper }} {{ candidates.0.0 }}</div></td>
+                        <td colspan="2"><div class="cand1"></div></td>
                         <td rowspan="3" class="bar_column"><div>Liczba głosów: <br />na kandydata / ważnych [&#37;]</div></td>
-                        <td colspan="2"><div>{{ candidates.1.1 | upper }} {{ candidates.1.0 }}</div></td>
+                        <td colspan="2"><div class="cand2"></div></td>
                     </tr>
                     <tr>
                         <td colspan="2"><div>głosów na kandydata</div></td>
@@ -149,60 +170,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for voiv in voivodeships %}
-                    {% with results=voiv.results %}
-                        {% if results.valid_votes %}
-                        <tr>
-                            <td><div class="voiv_code">{{ voiv.code }}</div>{{ forloop.counter }}</td>
-                            <td>{{ voiv.name }}</td>
-                            <td>{{ results.valid_votes }}</td>
-                            <td>{{ results.candidates.0.votes }}</td>
-                            <td>{{ results.candidates.0.percentage }}</td>
-                            <td>
-                                <div class="result_bar">
-                                    <span class="difference"
-                                          style="width: {{ results.candidates.0.percentage |floatformat:"0"}}%"></span>
-                                </div>
-                            </td>
-                            <td>{{ results.candidates.1.votes }}</td>
-                            <td>{{ results.candidates.1.percentage }}</td>
-                        </tr>
-                        {% endif %}
-                    {% endwith %}
-                {% endfor %}
                 </tbody>
                 <tfoot>
-                {% with result=voiv_overall %}
-                    <tr>
-                        <td>Σ</td>
-                        <td>Polska</td>
-                        <td>{% firstof result.valid_votes "0" %}</td>
-                        <td>{{ result.candidates.0.votes }}</td>
-                        <td>{{ result.candidates.0.percentage }}</td>
-                        <td>
-                            <div class="result_bar">
-                                <span class="difference"
-                                      style="width: {{ result.candidates.0.percentage |floatformat:"0"}}%"></span>
-                            </div>
-                        </td>
-                        <td>{{ result.candidates.1.votes }}</td>
-                        <td>{{ result.candidates.1.percentage }}</td>
-                    </tr>
-                {% endwith %}
                 </tfoot>
             </table>
         </article>
         <article>
             <h2>Porównanie wyników głosowania na kandydatów w zależności od siedziby komisji obwodowej</h2>
-            <table class="comparison">
+            <table id="quantile_comparison" class="comparison">
                 <thead>
                     <tr>
                         <td rowspan="3">Nr</td>
                         <td rowspan="3">Podział</td>
                         <td rowspan="3">Liczba głosów ważnych</td>
-                        <td colspan="2">{{ candidates.0.1 | upper }} {{ candidates.0.0 }}</td>
+                        <td colspan="2" class="cand1"></td>
                         <td rowspan="3" class="bar_column">Liczba głosów: <br />na kandydata / ważnych [&#37;]</td>
-                        <td colspan="2">{{ candidates.1.1 | upper }} {{ candidates.1.0 }}</td>
+                        <td colspan="2" class="cand2"></td>
                     </tr>
                     <tr>
                         <td colspan="2">głosów na kandydata</td>
@@ -216,54 +199,56 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for type in types %}
-                    {% with results=type.results %}
-                        {% if results.valid_votes %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ type.name }}</td>
-                            <td>{{ results.valid_votes }}</td>
-                            <td>{{ results.candidates.0.votes }}</td>
-                            <td>{{ results.candidates.0.percentage }}</td>
-                            <td>
-                                <div class="result_bar">
-                                    <span class="difference"
-                                        style="width: {{ results.candidates.0.percentage |floatformat:"0"}}%"></span>
-                                </div>
-                            </td>
-                            <td>{{ results.candidates.1.votes }}</td>
-                            <td>{{ results.candidates.1.percentage }}</td>
-                        </tr>
-                        {% endif %}
-                    {% endwith %}
-                {% endfor %}
-                    <tr>
+                    <tr class="separate">
                         <td colspan="8">
                             <h2>Porównanie wyników głosowania na kandydatów w zależności od liczby mieszkańców gminy</h2>
                         </td>
                     </tr>
-                {% for quantil in quantile %}
-                    {% if quantil.1.valid_votes  %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ quantil.0 }}</td>
-                        <td>{{ quantil.1.valid_votes }}</td>
-                        <td>{{ quantil.1.candidates.0.votes }}</td>
-                        <td>{{ quantil.1.candidates.0.percentage }}</td>
-                        <td>
-                            <div class="result_bar">
-                                <span class="difference"
-                                      style="width: {{ quantil.1.candidates.0.percentage |floatformat:"0"}}%"></span>
-                            </div>
-                        </td>
-                        <td>{{ quantil.1.candidates.1.votes }}</td>
-                        <td>{{ quantil.1.candidates.1.percentage }}</td>
-                    </tr>
-                    {% endif %}
-                {% endfor %}
                 </tbody>
             </table>
         </article>
     </section>
+    <div class="modal"></div>
+    <section class="modal_val">
+    <article>
+            <h2>Widok szczegółowy</h2>
+            <div class="table_container">
+                <table id="detailed" class="comparison">
+                    <thead>
+                        <tr>
+                            <td rowspan="3"><div class="clicked">Nr</div></td>
+                            <td rowspan="3"><div>Nazwa</div></td>
+                            <td rowspan="3"><div>Liczba głosów ważnych</div></td>
+                            <td colspan="2"><div class="cand1"></div></td>
+                            <td rowspan="3" class="bar_column"><div>Liczba głosów: <br />na kandydata / ważnych [&#37;]</div></td>
+                            <td colspan="2"><div class="cand2"></div></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><div>głosów na kandydata</div></td>
+                            <td colspan="2"><div>głosów na kandydata</div></td>
+                        </tr>
+                        <tr>
+                            <td><div>liczba</div></td>
+                            <td><div>&#37;</div></td>
+                            <td><div>liczba</div></td>
+                            <td><div>&#37;</div></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                    <tfoot>
+                    </tfoot>
+                </table>
+            </div>
+        </article>
+    </section>
+    <footer>
+        <section>
+            <article><h2>Warszawa 2016</h2></article>
+        </section>
+    </footer>
+    <div class="error">
+        <section><p></p></section>
+    </div>
 </body>
 </html>

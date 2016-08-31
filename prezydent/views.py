@@ -1,50 +1,93 @@
-from django.shortcuts import render
-from prezydent.models import Voivodeship, Candidate, MunicipalityType
-from django.db.models import Sum
+from django.views.generic import TemplateView, View
+from django.contrib.auth import logout, authenticate, login
+from prezydent.models import Candidate, Voivodeship, MunicipalityType, Municipality
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+import json
+
+infinity = 100000000
+exter = ['statki', 'zagranica']
+within_country = ['wieś', 'miasto']
+
+STATUS_OK = 'OK'
+STATUS_ERROR = 'ERROR'
 
 
-def prezydent(request):
-    infinity = 100000000
-    exter = ['statki', 'zagranica']
-    candidates = []
-    cands = Candidate.objects.all().order_by('surname').values('first_name', 'surname')
-    for cand in cands:
-        candidates.append(list(cand.values()))
-    ships_and_abroad = ('statki i zagranica', MunicipalityType.results_in_range(0, infinity, exter))
-    thresholds = [5000, 10000, 20000, 50000, 100000, 200000, 500000, infinity]
-    quantile = [ships_and_abroad]
-    end = 0
-    for i, step in enumerate(thresholds):
-        st = end
-        end = step
-        if i == 0:
-            name = "do " + str(end)
-        elif i == len(thresholds) - 1:
-            name = "pow. " + str(st)
+class Main(TemplateView):
+    template_name = 'prezydent.html'
+
+
+class Results(View):
+
+    def get(self, request):
+        types = MunicipalityType.objects.all()
+        voivs = Voivodeship.objects.all()
+        cands = Candidate.objects.all()
+        voivs = [{'name': voiv.name, 'id': voiv.code, 'results': voiv.results} for voiv in voivs]
+        candidates = [{'first_name': cand.first_name, 'surname': cand.surname, 'results': cand.results}
+                      for cand in cands]
+        types = [{'name': type.name, 'results': type.results, 'id': type.id} for type in types]
+        thresholds = [5000, 10000, 20000, 50000, 100000, 200000, 500000, infinity]
+        quantile = []
+        end = 0
+        for i, step in enumerate(thresholds):
+            st = end
+            end = step
+            if i == 0:
+                name = "do " + str(end)
+            elif i == len(thresholds) - 1:
+                name = "pow. " + str(st)
+            else:
+                name = "od " + str(st) + " do " + str(end)
+            quantile.append({'name': name, 'id': str(st) + '_' + str(end),
+                             'results': MunicipalityType.results_in_range(st + 1, end, within_country)})
+        return JsonResponse({'types': types, 'quantile': quantile, 'candidates': candidates, 'voivs': voivs})
+
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, request, *args, **kwargs):
+        return super(Results, self).dispatch(request, *args, *kwargs)
+
+
+class Detailed(View):
+
+    def get(self, request, type, typepar, optpar=None):
+        accepted = {
+            'voiv': lambda : Municipality.objects.filter(voivodeship__code=typepar),
+            'type': lambda : Municipality.objects.filter(type__id=typepar),
+            'quant': lambda : Municipality.objects.filter(dwellers__gte=typepar, dwellers__lte=optpar)
+        }
+        lst = accepted.get(type)
+        if lst is None:
+            return JsonResponse({'status': 'Incorrect type passed'})
+        ms = [{'name': m.name, 'results': m.results, 'id': m.id} for m in lst()]
+        return JsonResponse({'status': 'OK', 'muni': ms})
+
+
+class Login(View):
+
+    def get(self, request):
+        if request.user.is_authenticated():
+            return JsonResponse({'status': 'loggedin','username': request.user.username})
         else:
-            name = "od " + str(st) + " do " + str(end)
-        quantile.append((name, MunicipalityType.results_in_range(st, end, ['wieś', 'miasto'])))
-    overall = MunicipalityType.results_in_range(0, infinity,
-                                                MunicipalityType.objects.all().values_list('name', flat=True))
-    overall_pl = MunicipalityType.results_in_range(0, infinity, MunicipalityType.objects.exclude(name__in=exter)
-                                                   .values_list('name', flat=True))
-    density = None
-    if overall_pl.get('dwellers'):
-        density = round(overall_pl.get('dwellers') / 312685)
-    return render(request, 'prezydent.html', {
-        'voivodeships': Voivodeship.objects.all(),
-        'overall': overall,
-        'voiv_overall': overall_pl,
-        'density': density,
-        'candidates': candidates,
-        'types': MunicipalityType.objects.filter(municipality__isnull=False,
-                                                 municipality__candidateresult__isnull=False).distinct(),
-        'quantile': quantile
+            return JsonResponse({'status': 'anonymous'})
 
-    })
+    def post(self, request):
+        data = json.loads(request.body.decode('utf-8'))
+        if data.get('logout'):
+            logout(request)
+        else:
+            username = data.get('username')
+            password = data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+            else:
+                return JsonResponse({'status': 'unrecognized'})
+        return self.get(request)
 
 
-#def handle_500(request):
+# def handle_500(request):
 #    template = loader.get_template('500.html')
 #    back = request.META['HTTP_REFERER']
 #    return HttpResponseServerError(template.render(Context({'prev': back})))

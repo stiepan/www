@@ -1,16 +1,12 @@
 from django.contrib import admin
 from django.db import transaction
 from django import forms
-from django.contrib.auth.models import User, Group
 from .models import Voivodeship, Municipality, MunicipalityType, Candidate, CandidateResult
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from django.contrib.messages import constants as message_constants
 from django.shortcuts import HttpResponseRedirect
 from django.db.models import Count, Max, F
-
-admin.site.unregister(User)
-admin.site.unregister(Group)
 
 admin.site.register(Voivodeship)
 admin.site.register(MunicipalityType)
@@ -65,7 +61,7 @@ class MunicipalityForm(forms.ModelForm):
                 if valid_votes is None or candidates_votes != valid_votes:
                     raise forms.ValidationError("Głosy ważne powinny być sumą głosów oddanych na kandydatów.")
             # Don't really bother multi-thread environment as model enforces uniqueness of the name
-            # in case of the race user might simply see 500 server error
+            # in case of the race user would simply see 500 server error
             existing = Municipality.objects.filter(name=name, type=self.cleaned_data['type'],
                                                    voivodeship=self.cleaned_data['voivodeship'])
             if self.instance is not None:
@@ -212,6 +208,9 @@ class CandidateAdmin(admin.ModelAdmin):
                 # As just a few steps before it was stated there is less than two Candidates
                 raise MultiThreadRaceSave
 
+    # It's not actually idiomatic for django to deny to save data in save model method
+    # but it's virtually only way to prevent multiple save in multi thread environment
+    # using no more than transactions on methods.
     def save_model(self, request, obj, form, change):
         n_candidates = Candidate.objects.all().count()
         if not change and n_candidates >= 2:

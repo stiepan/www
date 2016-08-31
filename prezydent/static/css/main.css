@@ -2,24 +2,50 @@ body {
     margin: 0px;
     padding: 0px;
     background: #eae8e0;
+    overflow-x: hidden;
 }
 header {
     width: 100%;
     background: white;
 }
+p, section, a{
+    font-family: Arial, Sans-serif;
+}
 section {
     width: 989px;
     margin: 0px auto;
-    font-family: Arial, Sans-serif;
     font-size: 16px;
 }
-header .langs {
+header .log {
     background: #76808d;
 }
-header .langs section {
+header input {
+    background: white;
+    outline: none;
+    border: none;
+    padding: 4px;
+    margin: 10px 0px auto auto;
+    font-size: 70%;
+}
+header input[type='text'], header input[type='password']{
+    width: 50px;
+}
+header input[type='submit'] {
+    background: #929eaf;
+}
+header .log p, header .log a {
+    font-size: 70%;
+    color: white;
+    margin: 0px;
+}
+header .log p {
+    padding-top: 5px;
+}
+header .log section {
     background: url('../img/top_pl.png') no-repeat;
     width: 989px;
     height: 41px;
+    text-align: right;
 }
 header .banner::before{
     content: "";
@@ -61,18 +87,18 @@ header nav::before {
 header nav::after {
     top: 5px;
 }
-header nav a , header nav a:visited {
+header a , header a:visited {
     color: white;
     font-size: 70%;
     letter-spacing: 1px;
     font-weight: bold;
     text-decoration: none;
 }
-header nav a:hover {
+header a:hover {
     color: #a90414;
     cursor: pointer;
 }
-header nav a + a::before {
+header a + a::before {
     content: "|";
     display: inline-block;
     padding: 0px 5px 0px 0px;
@@ -117,7 +143,7 @@ aside h2 {
     padding-top: 5px;
 }
 aside ul {
-    list-style: url("/static/img/pointer.png");
+    list-style: url("../img/pointer.png");
     margin: 10px 0px;
     line-height: 70%;
 }
@@ -188,9 +214,6 @@ a:hover {
 .comparison .bar_column {
     width: 35%;
 }
-.voiv_code {
-    display: none;
-}
 .result_bar {
     width: 100%;
     height: 13px;
@@ -232,10 +255,12 @@ a:hover {
     border-bottom: none;
     border-left: none;
     overflow: hidden;
+    background: url('../img/map.png') no-repeat -1px 0px;
 }
 #map_loader {
     margin-left: 153px;
     margin-top: 122px;
+    display: none;
 }
 #results_details {
     float: right;
@@ -297,4 +322,85 @@ tr .clicked::after {
 tr .asc::after {
     border-top: none;
     border-bottom: solid 5px black;
+}
+.modal {
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    background: grey;
+    opacity: 0.9;
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    display: none;
+}
+.loader {
+    display: block;
+}
+.loader::before {
+    content: url('../img/loader_main.gif');
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin: -30px auto auto -30px;
+}
+.modal_val {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    top: 20px;
+    left: calc(50% - 494px);
+}
+.modal_val .table_container {
+    overflow-y: auto;
+}
+footer {
+    width: 100%;
+    background: #929eaf;
+    border-top: solid 1px #8c8c8c;
+    padding: 5px 0;
+}
+footer article {
+    border: none;
+    background: transparent;
+}
+footer h2 {
+    text-align: center;
+}
+
+@keyframes show {
+    0%   {bottom: -40px;}
+    100% {bottom: 0px;}
+}
+.error {
+    width: 100%;
+    margin: 0px;
+    background-color: #860e07;
+    border-top: 2px solid #c40414;
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+    z-index: 11;
+    animation-name: show;
+    animation-duration: 1s;
+    display: none;
+}
+.error p {
+    display: block;
+    color: white;
+    margin: 0px;
+    padding: 10px 0px 10px 20px;
+}
+@keyframes show_details {
+    0%   {height: 0px;}
+    100% {height: 150px;}
+}
+.muni_details {
+    height: 150px;
+    animation-name: show_details;
+    animation-duration: 0.5s;
+}
+.clicked_row {
+    background: #fffacb;
 }
