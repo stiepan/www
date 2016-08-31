@@ -33,7 +33,6 @@ class MunicipalityForm(forms.Form):
         if len(mun) != 1:
             raise MultiThreadRaceSave
         for candidate_name in self._candidates_fields:
-            print ("xDD")
             candidate_id = candidate_name.split('_')[1]
             candidate_votes = self.cleaned_data[candidate_name]
             CandidateResult.objects.filter(candidate__id=candidate_id, municipality=mun.first()).update(votes=candidate_votes)

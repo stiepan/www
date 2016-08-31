@@ -1,5 +1,11 @@
 var loggedin = false;
 
+var show_loader = function () {
+    var loader = $('<div></div>');
+    loader.addClass('modal loader');
+    $('body').append(loader);
+};
+
 var cookie = function (name) {
     var cookies = document.cookie.split(';');
     for (var i = 0; i < cookies.length; i++) {
@@ -11,7 +17,7 @@ var cookie = function (name) {
 };
 
 var failwith =  function (txt) {
-    var err = $('.error');
+    var err = $('.error').removeClass('fine');
     err.find('p').text(txt);
     err.show();
     setTimeout(function(){
@@ -25,7 +31,6 @@ var fine =  function (txt) {
     err.show();
     setTimeout(function(){
         err.hide();
-        err.removeClass('fine')
     }, 5000);
 };
 
@@ -33,11 +38,7 @@ var request = function (addr, type, params) {
     var type = typeof type === 'undefined'? 'GET' : type;
     var params = typeof params === 'undefined'? {} : params;
     params = JSON.stringify(params);
-    var loader = $('<div></div>');
-    loader.addClass('modal loader');
     return new Promise(function (resolve, reject) {
-        if (!$('.modal.loader').length)
-            $('body').append(loader);
         var req = new XMLHttpRequest();
         req.open(type, addr, true);
         if (type == 'POST') {
@@ -161,6 +162,7 @@ var detail = function(type, param, clicked) {
     if (!detail_prog) {
         detail_prog = true;
         if (type != 'muni') {
+            show_loader();
             request('/results/detailed/' + type + ',' + param).then(function (res) {
                 if (res.status && res.status == "OK") {
                     populate_table('muni', res.muni, 'detailed');
@@ -172,7 +174,6 @@ var detail = function(type, param, clicked) {
                 }
                 else {
                     console.log("Wystąpił błąd serwera w wyniku nieprawidłowego zapytania.");
-                    console.log(res)
                 }
             }, function (err) {
                 console.log(err);
@@ -187,10 +188,17 @@ var detail = function(type, param, clicked) {
             cont.find('.clicked_row').removeClass('clicked_row');
             if (!is_active) {
                 var disabled = loggedin ? '' : 'disabled=""';
+                show_loader();
                 request('/municipality/' + param).then( function (res) {
                     var munitr = $('<tr class="muni_details_row"></tr>');
                     var muni = $('<td colspan="8" class="muni_details"></td>');
+                    var lastmod = 'nigdy';
                     $.each(res, function(k, v) {
+                        var ddisplay = '';
+                        if (k == 'last_modification'){
+                            ddisplay = 'style="display: none"';
+                            lastmod = v.val;
+                        }
                         var ddisplay = k == 'last_modification'? 'style="display: none"' : '';
                         muni.append('<div '+ddisplay+' class="det_item"><label for="muni___'+k+'">'+v.name+'</label>' +
                             '<input '+disabled+' type="text" name="muni___'+k+'" value="'+v.val+'"></div>')
@@ -200,8 +208,8 @@ var detail = function(type, param, clicked) {
                         contr.append('<a>Anuluj</a>').on('click', function () {
                             clicked.trigger('click');
                         });
-                        contr.append($('<a>Zapisz</a>').on('click', function() {
-                            update_muni(param);
+                        contr.append($('<a id="save_but">Zapisz</a>').on('click', function() {
+                            update_muni(param, lastmod);
                         }));
                         muni.append(contr);
                     }
@@ -221,8 +229,8 @@ var detail = function(type, param, clicked) {
 var loginForm = function () {
     loggedin = false;
     var form = $('<form></form>');
-    var login = $('<input type="text" value="login" name="username">');
-    var password = $('<input type="password" value="login" name="password">');
+    var login = $('<input type="text" value="login" id="id_username" name="username">');
+    var password = $('<input type="password" value="login" id="id_password" name="password">');
     var submit = $('<input type="submit" value=">">');
     $.each([login, password], function(i, obj) {
         obj.on('focus', function () {
@@ -236,6 +244,7 @@ var loginForm = function () {
     });
     form.on('submit', function(e) {
         e.preventDefault();
+        show_loader();
         request('/login/', 'POST', {
             'username': $(this).find('[name=username]').val(),
             'password': $(this).find('[name=password]').val()
@@ -244,10 +253,11 @@ var loginForm = function () {
                 failwith("Błędne dane logowania.");
             }
             else {
-                var hi = $('<p>Wtiaj, '+res.username+'. </p>');
-                var logout_but = $('<a>Wyloguj się</a>').on('click', logout);
+                var hi = $('<p>Witaj, '+res.username+'. </p>');
+                var logout_but = $('<a id="logoutbut">Wyloguj się</a>').on('click', logout);
                 $('.log section').empty().append(hi).append(logout_but);
                 loggedin = true;
+                fine("Zalogowano pomyślnie.");
             }
             $('.loader').detach();
         })
@@ -256,9 +266,11 @@ var loginForm = function () {
 };
 
 var logout = function () {
+    show_loader();
     request('/login/', 'POST', {'logout': true}).then(function (res) {
         if (res.status != 'loggedin') {
             loginForm();
+            fine("Nastąpiło wylgowanie.");
         }
         else {
             failwith("Nieudane wylogowanie.")
@@ -267,34 +279,52 @@ var logout = function () {
     });
 };
 
-var update_muni = function (id) {
-    var els = $('.det_item input');
-    var data = {};
-    $.each(els, function(i, obj) {
-       obj = $(obj);
-        data[obj.prop('name').split('___')[1]] = obj.val();
-    });
-    data['id'] = id;
-    request('/municipality/', 'POST', data).then(function (res) {
-        if (res.status != 'OK') {
-            failwith(res.status);
-            $('.loader').detach();
-        }
-        else {
-            fine('Pomyślnie zapisano dane');
-            $('.loader').detach();
-        }
+var update_muni = function (id, lastmod) {
+    if (window.confirm("Czy na pewno chcesz zmodyfikować dane z " + lastmod)) {
+        var els = $('.det_item input');
+        var data = {};
+        $.each(els, function (i, obj) {
+            obj = $(obj);
+            data[obj.prop('name').split('___')[1]] = obj.val();
+        });
+        data['id'] = id;
+        show_loader();
+        request('/municipality/', 'POST', data).then(function (res) {
+            if (res.status != 'OK') {
+                failwith(res.status);
+                $('.loader').detach();
+            }
+            else {
+                fine('Pomyślnie zapisano dane');
+                $('.loader').detach();
+            }
+        });
+    }
+};
+
+var update_content = function (){
+    request('/results/').then(function (res) {
+        localStorage.res = JSON.stringify(res);
+        process_data(res);
+        $('.loader').detach();
+    }, function (err) {
+        console.log(err);
     });
 };
 
 $(document).ready(function () {
-    request('/results/').then(function (res) {
-        process_data(res);
-    }, function (err) {
-        console.log(err);
-    });
+    show_loader();
+    if (localStorage.hasOwnProperty('res')) {
+        process_data(JSON.parse(localStorage.res));
+        $('.loader').detach();
+    }
+    update_content();
     $('.modal').on('click', function () {
+        update_content();
         $('.modal, .modal_val').hide();
+    });
+    $(window).on('resize', function () {
+        $('.modal_val .table_container').css('max-height', ($(window).height() - 70) + 'px');
     });
     request('/login/').then(function (res) {
         if (res.status != 'loggedin') {
@@ -303,15 +333,10 @@ $(document).ready(function () {
         else {
             loggedin = true;
             var hi = $('<p>Wtiaj, '+res.username+'. </p>');
-            var logout_but = $('<a>Wyloguj się</a>').on('click', logout);
+            var logout_but = $('<a id="logoutbut">Wyloguj się</a>').on('click', logout);
             $('.log section').empty().append(hi).append(logout_but);
         }
-        $('.loader').detach();
     }, function (err) {
-        $('.loader').detach();
         console.log(err);
-    });
-    $(window).on('resize', function () {
-        $('.modal_val .table_container').css('max-height', ($(window).height() - 70) + 'px');
     });
 });
