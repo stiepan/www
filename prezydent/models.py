@@ -87,8 +87,9 @@ class Municipality(models.Model):
     issued_cards = models.PositiveIntegerField(verbose_name="Liczba wydanych kart do głosowania", null=True, blank=True)
     votes = models.PositiveIntegerField(verbose_name="Liczba oddanych głosów", null=True, blank=True)
     valid_votes = models.PositiveIntegerField(verbose_name="Liczba ważnych głosów", null=True, blank=True)
-    last_modification = models.DateTimeField(default=datetime.now, blank=True,
+    last_modification = models.DateTimeField(default=datetime.now, blank=True, null=True,
                                              verbose_name="Ostatnio modyfikowany")
+    counter = models.IntegerField(default=0)
 
     def __str__(self):
         return "Gmina " + self.name

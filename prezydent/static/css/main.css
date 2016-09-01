@@ -8,7 +8,7 @@ header {
     width: 100%;
     background: white;
 }
-p, section, a{
+p, section, a, h1, h2, h3 {
     font-family: Arial, Sans-serif;
 }
 section {
@@ -422,16 +422,16 @@ footer h2 {
     display: inline-block;
     font-weight: bold;
 }
-.det_item a {
+.button_contr {
     background: #a90414;
     padding: 3px;
     color: white;
 }
-.det_item a:hover {
+.button_contr:hover {
     background: white;
     color: #a90414;
 }
-.det_item a + a {
+.button_contr + .button_contr {
     margin-left: 15px;
 }
 .det_item input, .det_item input:disabled {
@@ -453,4 +453,54 @@ footer h2 {
     height: 20px;
     text-align: right;
     width: 270px;
+}
+@keyframes fadein {
+    0%   {opacity: 0.1;}
+    100% {opacity: 1.0;}
+}
+.confirm {
+    background: white;
+    border: 1px solid #929eaf;
+    border-radius: 5px;
+    width: 350px;
+    text-align: right;
+    padding: 10px 20px 10px 20px;
+    position: fixed;
+    top: 13px;
+    left: calc(50% - 175px);
+    z-index: 150;
+    animation-name: fadein;
+    animation-duration: 0.7s;
+    display: none;
+}
+.confirm:before, .confirm:after {
+    content: '';
+    display: block;
+    height: 0;
+    width: 0;
+}
+.confirm:before {
+    border-bottom: solid 13px #929eaf;
+    border-right: solid 13px transparent;
+    border-left: solid 13px transparent;
+    position: absolute;
+    top: -13px;
+    left: 174px;
+}
+.confirm p, .confirm h3, a {
+    font-size: 80%;
+}
+.confirm h3 {
+    margin-top: 10px;
+}
+.confirm:after {
+    border-bottom: solid 12px white;
+    border-right: solid 12px transparent;
+    border-left: solid 12px transparent;
+    position: absolute;
+    top: -12px;
+    left: 175px;
+}
+.confirm h3, .confirm p {
+    text-align: left;
 }

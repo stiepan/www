@@ -34,6 +34,17 @@ var fine =  function (txt) {
     }, 5000);
 };
 
+var confirm = function (txt, callback) {
+    var confirm = $('.confirm');
+    confirm.find('p').text(txt);
+    confirm.find('.button_contr').off('click').on('click', function () {confirm.hide();});
+    confirm.find('#confirm_ok').off('click').on('click', function () {
+        callback();
+        confirm.hide();
+    });
+    confirm.show();
+};
+
 var request = function (addr, type, params) {
     var type = typeof type === 'undefined'? 'GET' : type;
     var params = typeof params === 'undefined'? {} : params;
@@ -190,35 +201,42 @@ var detail = function(type, param, clicked) {
                 var disabled = loggedin ? '' : 'disabled=""';
                 show_loader();
                 request('/municipality/' + param).then( function (res) {
-                    var munitr = $('<tr class="muni_details_row"></tr>');
-                    var muni = $('<td colspan="8" class="muni_details"></td>');
-                    var lastmod = 'nigdy';
-                    $.each(res, function(k, v) {
-                        var ddisplay = '';
-                        if (k == 'last_modification'){
-                            ddisplay = 'style="display: none"';
-                            lastmod = v.val;
-                        }
-                        var ddisplay = k == 'last_modification'? 'style="display: none"' : '';
-                        muni.append('<div '+ddisplay+' class="det_item"><label for="muni___'+k+'">'+v.name+'</label>' +
-                            '<input '+disabled+' type="text" name="muni___'+k+'" value="'+v.val+'"></div>')
-                    });
-                    if (loggedin) {
-                        var contr = $('<div class="det_item contr"></div>')
-                        contr.append('<a>Anuluj</a>').on('click', function () {
-                            clicked.trigger('click');
+                    if (res.status != 'OK') {
+                        failwith(res.status);
+                    }
+                    else {
+                        var munitr = $('<tr class="muni_details_row"></tr>');
+                        var muni = $('<td colspan="8" class="muni_details"></td>');
+                        var lastmod = 'nigdy';
+                        $.each(res.attrs, function (k, v) {
+                            var ddisplay = '';
+                            var isin = ['last_modification', 'counter'].indexOf(k);
+                            if (isin >= 0) {
+                                ddisplay = 'style="display: none"';
+                                if (isin == 0)
+                                    lastmod = v.val;
+                            }
+                            muni.append('<div ' + ddisplay + ' class="det_item"><label for="muni___' + k + '">' + v.name + '</label>' +
+                                '<input ' + disabled + ' type="text" name="muni___' + k + '" value="' + v.val + '"></div>')
                         });
-                        contr.append($('<a id="save_but">Zapisz</a>').on('click', function() {
-                            update_muni(param, lastmod);
-                        }));
-                        muni.append(contr);
+                        if (loggedin) {
+                            var contr = $('<div class="det_item contr"></div>')
+                            contr.append('<a class="button_contr">Anuluj</a>').on('click', function () {
+                                clicked.trigger('click');
+                            });
+                            contr.append($('<a class="button_contr" id="save_but">Zapisz</a>').on('click', function (e){
+                                e.stopPropagation();
+                                update_muni(param, lastmod);
+                            }));
+                            muni.append(contr);
+                        }
+                        clicked.addClass('clicked_row');
+                        cont.animate({scrollTop: cont.scrollTop() - cont.offset().top + clicked.offset().top}, 500);
+                        setTimeout(function () {
+                            clicked.after(munitr.append(muni))
+                        }, 500);
                     }
                     $('.loader').detach();
-                    clicked.addClass('clicked_row');
-                    cont.animate({scrollTop: cont.scrollTop() - cont.offset().top + clicked.offset().top}, 500);
-                    setTimeout(function () {
-                        clicked.after(munitr.append(muni))
-                    }, 500);
                 });
             }
         }
@@ -280,7 +298,8 @@ var logout = function () {
 };
 
 var update_muni = function (id, lastmod) {
-    if (window.confirm("Czy na pewno chcesz zmodyfikować dane z " + lastmod)) {
+    var date = new Date(lastmod);
+    confirm("Czy na pewno chcesz zmodyfikować dane z " + date.toLocaleString("PL") + '?', function () {
         var els = $('.det_item input');
         var data = {};
         $.each(els, function (i, obj) {
@@ -299,7 +318,7 @@ var update_muni = function (id, lastmod) {
                 $('.loader').detach();
             }
         });
-    }
+    });
 };
 
 var update_content = function (){
