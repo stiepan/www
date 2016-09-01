@@ -83,7 +83,9 @@ var country_summary = function (res) {
     });
     $('.density').text((summary['dwellers'] / 312685).toFixed(2));
     google.charts.setOnLoadCallback(function () {
-        drawMarkersMap(res.candidates[0].surname, res.candidates[1].surname);
+        if (res.candidates.length == 2) {
+            drawMarkersMap(res.candidates[0].surname, res.candidates[1].surname);
+        }
     });
 };
 
@@ -143,7 +145,7 @@ var table_summary = function (tb_id, type, cols) {
 };
 
 var candidates = function (cands) {
-    if (cands.length == 2) {
+    if (cands.length == 2 && cands[0].results) {
         $('.cand1').text(cands[0].surname.toUpperCase() + ' ' + cands[0].first_name);
         $('.cand2').text(cands[1].surname.toUpperCase() + ' ' + cands[1].first_name);
         $('.result_bar.first_cand .difference').css('width', cands[0].results.percentage + '%');
