@@ -4,8 +4,10 @@ from django.test import TestCase
 from prezydent.models import MunicipalityType, Municipality, Candidate, CandidateResult
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from django.core.urlresolvers import reverse
 from django.utils import timezone
 from time import sleep
+import json
 
 
 class TestAjax(TestCase):
@@ -15,7 +17,7 @@ class TestAjax(TestCase):
         muntm.save()
         munti = MunicipalityType(name='inne')
         munti.save()
-        munin = Municipality(name='Miasto', type=muntm)
+        munin = Municipality(name='Gmina', type=muntm)
         munin.save()
         munact = Municipality(name='MiastoActive', type=muntm, dwellers=10, entitled=10, issued_cards=10, valid_votes=10,
                               votes=10)
@@ -31,11 +33,18 @@ class TestAjax(TestCase):
 
     def test_results_omit_empty_types(self):
         m = MunicipalityType.objects.get(name='miasto')
-        response = self.client.get('/results/detailed/type,' + str(m.id))
+        response = self.client.get(reverse('details', args=['type', m.id]))
         response = response.json()
 
         assert response['status'] == 'OK'
         assert len(response['muni']) == 1
+
+    def test_get_active_mui(self):
+        m=Municipality.objects.get(name='Gmina')
+        response = self.client.get(reverse('muni', args=[m.id]))
+        data = json.loads(response.content.decode('utf-8'))
+        assert data['status'] != 'OK'
+
 
 
 # Use it only when you have account testuser testpassword account
